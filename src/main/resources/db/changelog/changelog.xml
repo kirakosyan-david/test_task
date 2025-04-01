@@ -1,0 +1,78 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="1" author="David Kirakosyan">
+        <sql>
+            CREATE TYPE goal_enum AS ENUM ('WEIGHT_LOSS', 'MAINTENANCE', 'MASS_GAIN');
+            CREATE TABLE users (
+                                   id SERIAL PRIMARY KEY,
+                                   name VARCHAR(255) NOT NULL,
+                                   email VARCHAR(255) UNIQUE NOT NULL,
+                                   age INT NOT NULL CHECK (age > 0),
+                                   weight DOUBLE PRECISION NOT NULL CHECK (weight > 0),
+                                   height DOUBLE PRECISION NOT NULL CHECK (height > 0),
+                                   goal goal_enum NOT NULL,
+                                   daily_calories DOUBLE PRECISION NOT NULL,
+                                   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="2" author="David Kirakosyan">
+        <sql>
+            CREATE TABLE dishes (
+                                    id SERIAL  PRIMARY KEY,
+                                    name VARCHAR(255) NOT NULL,
+                                    calories_per_serving DOUBLE PRECISION NOT NULL,
+                                    protein DOUBLE PRECISION NOT NULL,
+                                    fats DOUBLE PRECISION NOT NULL,
+                                    carbs DOUBLE PRECISION NOT NULL,
+                                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="3" author="David Kirakosyan">
+        <sql>
+            CREATE TABLE foods (
+                                   id SERIAL  PRIMARY KEY,
+                                   user_id INT REFERENCES users(id) ON DELETE CASCADE,
+                                   meal_date DATE NOT NULL,
+                                   total_calories DOUBLE PRECISION NOT NULL,
+                                   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="4" author="David Kirakosyan">
+        <sql>
+            CREATE TABLE food_dishes
+            (
+                id SERIAL  PRIMARY KEY,
+                food_id INT REFERENCES foods(id) ON DELETE CASCADE,
+                dish_id INT REFERENCES dishes(id) ON DELETE CASCADE,
+                serving_size DOUBLE PRECISION NOT NULL CHECK (serving_size > 0),
+                total_calories DOUBLE PRECISION NOT NULL
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="5" author="David Kirakosyan">
+        <sql>
+            CREATE TABLE daily_reports
+            (
+                id SERIAL  PRIMARY KEY,
+                user_id INT NOT NULL,
+                report_date DATE NOT NULL,
+                total_calories DOUBLE PRECISION NOT NULL,
+                is_within_limit BOOLEAN NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_reports_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+                CONSTRAINT unique_user_report UNIQUE (user_id, report_date)
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
